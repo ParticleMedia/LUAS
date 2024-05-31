@@ -1,0 +1,130 @@
+{
+    "hotel":{
+        "pricerange":[
+            "expensive",
+            "cheap",
+            "moderate"
+        ],
+        "type":[
+            "guesthouse",
+            "hotel"
+        ],
+        "parking":[
+            "no",
+            "yes"
+        ],
+        "internet":[
+            "no",
+            "yes"
+        ],
+        "stars":[
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5"
+        ],
+        "area":[
+            "centre",
+            "east",
+            "north",
+            "south",
+            "west"
+        ]
+    },
+    "restaurant":{
+        "pricerange":[
+            "expensive",
+            "cheap",
+            "moderate"
+        ],
+        "food":[
+            "italian",
+            "international",
+            "indian",
+            "chinese",
+            "modern european",
+            "european",
+            "british",
+            "gastropub",
+            "mexican",
+            "lebanese",
+            "vietnamese",
+            "spanish",
+            "french",
+            "japanese",
+            "portuguese",
+            "korean",
+            "turkish",
+            "asian oriental",
+            "african",
+            "mediterranean",
+            "seafood",
+            "thai",
+            "north american"
+        ],
+        "area":[
+            "centre",
+            "east",
+            "north",
+            "south",
+            "west"
+        ]
+    },
+    "attraction":{
+        "area":[
+            "centre",
+            "east",
+            "north",
+            "south",
+            "west"
+        ],
+        "type":[
+            "architecture",
+            "boat",
+            "cinema",
+            "college",
+            "concerthall",
+            "entertainment",
+            "museum",
+            "multiple sports",
+            "nightclub",
+            "park",
+            "swimmingpool",
+            "theatre"
+        ]
+    },
+    "train":{
+        "departure":[
+            "birmingham new street",
+            "bishops stortford",
+            "broxbourne",
+            "cambridge",
+            "ely",
+            "kings lynn",
+            "leicester",
+            "london kings cross",
+            "london liverpool street",
+            "norwich",
+            "peterborough",
+            "stansted airport",
+            "stevenage"
+        ],
+        "destination":[
+            "birmingham new street",
+            "bishops stortford",
+            "broxbourne",
+            "cambridge",
+            "ely",
+            "kings lynn",
+            "leicester",
+            "london kings cross",
+            "london liverpool street",
+            "norwich",
+            "peterborough",
+            "stansted airport",
+            "stevenage"
+        ]
+    }
+}

@@ -1,0 +1,43 @@
+{
+  "train": [
+    "train-bookpeople",
+    "train-departure",
+    "train-leaveat",
+    "train-destination",
+    "train-arriveby",
+    "train-day",
+    "train-trainid"
+  ],
+  "attraction": [
+    "attraction-name",
+    "attraction-type",
+    "attraction-area"
+  ],
+  "restaurant": [
+    "restaurant-booktime",
+    "restaurant-bookpeople",
+    "restaurant-bookday",
+    "restaurant-food",
+    "restaurant-name",
+    "restaurant-area",
+    "restaurant-pricerange"
+  ],
+  "hotel": [
+    "hotel-bookday",
+    "hotel-bookstay",
+    "hotel-bookpeople",
+    "hotel-stars",
+    "hotel-name",
+    "hotel-area",
+    "hotel-internet",
+    "hotel-pricerange",
+    "hotel-type",
+    "hotel-parking"
+  ],
+  "taxi": [
+    "taxi-leaveat",
+    "taxi-destination",
+    "taxi-departure",
+    "taxi-arriveby"
+  ]
+}

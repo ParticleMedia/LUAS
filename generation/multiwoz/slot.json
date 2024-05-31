@@ -1,0 +1,262 @@
+{
+  "hotel": {
+    "categorical": {
+      "pricerange": [
+        "expensive",
+        "cheap",
+        "moderate"
+      ],
+      "type": [
+        "guesthouse",
+        "hotel"
+      ],
+      "parking": [
+        "free",
+        "no",
+        "yes"
+      ],
+      "bookday": [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday"
+      ],
+      "bookpeople": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8"
+      ],
+      "bookstay": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8"
+      ],
+      "stars": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "internet": [
+        "free",
+        "no",
+        "yes"
+      ],
+      "area": [
+        "centre",
+        "east",
+        "north",
+        "south",
+        "west"
+      ]
+    },
+    "non_categorical": [
+      "name",
+      "address",
+      "phone",
+      "postcode",
+      "ref"
+    ]
+  },
+  "train": {
+    "categorical": {
+      "departure": [
+        "birmingham new street",
+        "bishops stortford",
+        "broxbourne",
+        "cambridge",
+        "ely",
+        "kings lynn",
+        "leicester",
+        "london kings cross",
+        "london liverpool street",
+        "norwich",
+        "peterborough",
+        "stansted airport",
+        "stevenage"
+      ],
+      "day": [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday"
+      ],
+      "bookpeople": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "15"
+      ],
+      "destination": [
+        "birmingham new street",
+        "bishops stortford",
+        "broxbourne",
+        "cambridge",
+        "ely",
+        "kings lynn",
+        "leicester",
+        "london kings cross",
+        "london liverpool street",
+        "norwich",
+        "peterborough",
+        "stansted airport",
+        "stevenage"
+      ]
+    },
+    "non_categorical": [
+      "arriveby",
+      "leaveat",
+      "trainid",
+      "ref",
+      "price",
+      "duration"
+    ]
+  },
+  "attraction": {
+    "categorical": {
+      "area": [
+        "centre",
+        "east",
+        "north",
+        "south",
+        "west"
+      ],
+      "type": [
+        "architecture",
+        "boat",
+        "cinema",
+        "college",
+        "concerthall",
+        "entertainment",
+        "museum",
+        "multiple sports",
+        "nightclub",
+        "park",
+        "swimmingpool",
+        "theatre"
+      ]
+    },
+    "non_categorical": [
+      "name",
+      "entrancefee",
+      "openhours",
+      "address",
+      "phone",
+      "postcode"
+    ]
+  },
+  "restaurant": {
+    "categorical": {
+      "pricerange": [
+        "cheap",
+        "expensive",
+        "moderate"
+      ],
+      "area": [
+        "centre",
+        "east",
+        "north",
+        "south",
+        "west"
+      ],
+      "bookday": [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday"
+      ],
+      "bookpeople": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8"
+      ]
+    },
+    "non_categorical": [
+      "food",
+      "name",
+      "booktime",
+      "address",
+      "phone",
+      "postcode",
+      "ref"
+    ]
+  },
+  "hospital": {
+    "categorical": {},
+    "non_categorical": [
+      "department",
+      "address",
+      "phone",
+      "postcode"
+    ]
+  },
+  "taxi": {
+    "categorical": {},
+    "non_categorical": [
+      "leaveat",
+      "destination",
+      "departure",
+      "arriveby",
+      "type",
+      "phone"
+    ]
+  },
+  "bus": {
+    "categorical": {
+      "day": [
+        "wednesday"
+      ]
+    },
+    "non_categorical": [
+      "departure",
+      "destination",
+      "leaveat"
+    ]
+  },
+  "police": {
+    "categorical": {
+      "name": [
+        "parkside police station"
+      ]
+    },
+    "non_categorical": [
+      "address",
+      "phone",
+      "postcode"
+    ]
+  }
+}

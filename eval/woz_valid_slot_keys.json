@@ -1,0 +1,42 @@
+{
+  "train": [
+    "bookpeople",
+    "departure",
+    "leaveat",
+    "destination",
+    "arriveby",
+    "day"
+  ],
+  "attraction": [
+    "name",
+    "type",
+    "area"
+  ],
+  "restaurant": [
+    "booktime",
+    "bookpeople",
+    "bookday",
+    "food",
+    "name",
+    "area",
+    "pricerange"
+  ],
+  "hotel": [
+    "bookday",
+    "bookstay",
+    "bookpeople",
+    "stars",
+    "name",
+    "area",
+    "internet",
+    "pricerange",
+    "type",
+    "parking"
+  ],
+  "taxi": [
+    "leaveat",
+    "destination",
+    "departure",
+    "arriveby"
+  ]
+}
