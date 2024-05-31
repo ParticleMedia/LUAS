@@ -25,7 +25,7 @@ In the following, we will guide you how to use this repository step by step.
 
 ## Results
 
-![results](pictures/result.png)
+![results](pictures/Result.png)
 
 ## Preparation
 
