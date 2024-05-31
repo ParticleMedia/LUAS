@@ -25,7 +25,7 @@ In the following, we will guide you how to use this repository step by step.
 
 ## Results
 
-![results](pictures/Result.png)
+<img src="pictures/result.png" alt="results" style="width:50%;">
 
 ## Preparation
 
