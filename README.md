@@ -21,7 +21,7 @@ In the following, we will guide you how to use this repository step by step.
 
 ## Architecture
 
-![framework](pictures/framework.png)
+![framework](pictures/framework.jpg)
 
 ## Results
 
