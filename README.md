@@ -40,7 +40,7 @@ pip install -r requirements.txt
 
 ```Shell
 # Generate New Data
-cd generation
+cd generation/multiwoz
 python run.py # or bash run.sh batched 
 
 # prepare real data
