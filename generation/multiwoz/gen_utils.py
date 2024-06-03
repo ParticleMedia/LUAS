@@ -67,23 +67,7 @@ def prepare_preference(services):
     for service in services:
         if service == 'taxi':
             continue
-        if not service2slots or service == 'train':
-            service2slots[service] = random.choice(woz_db.service2db[service])
-        elif random.random() <= 0.5:
-            service2slots[service] = random.choice(woz_db.service2db[service])
-        else:
-            areas = {slots['area'] for slots in service2slots.values() if 'area' in slots}
-            if len(areas) == 1:
-                same_area_slots = [
-                    slots for slots in woz_db.service2db[service] if slots['area'] in areas
-                ]
-                if same_area_slots:
-                    slots = random.choice(same_area_slots)
-                else:
-                    slots = random.choice(woz_db.service2db[service])
-            else:
-                slots = random.choice(woz_db.service2db[service])
-            service2slots[service] = slots
+        service2slots[service] = random.choice(woz_db.service2db[service])
 
     service2preference = {
         service: {k: slot.get(k, '') for k in config.service2preference[service]}
@@ -126,7 +110,7 @@ def prepare_preference(services):
             del service2preference['train']['leaveat']
         service2preference['train']['bookpeople'] = '1' if random.random() < 0.1 else str(int(random.random() * 8) + 1)
 
-    # 10% 的直推概率，首轮出现概率下降 10%
+    #
     name_prob_scale = 1.
     if 'restaurant' in service2preference:
         minutes = int(720 * random.random())
@@ -137,21 +121,22 @@ def prepare_preference(services):
 
         if 'type' in service2preference['restaurant']:
             del service2preference['restaurant']['type']
-        if 'name' in service2preference['restaurant'] and random.random() > (0.16 * name_prob_scale):
-            # 78 -> 12
+
+        # remove name (80%) to avoid directly asking information for a specific one from user agent
+        if 'name' in service2preference['restaurant'] and random.random() > (0.2 * name_prob_scale):
             del service2preference['restaurant']['name']
 
     if 'hotel' in service2preference:
         service2preference['hotel']['bookday'] = random.choice(config.bookdays)
         service2preference['hotel']['bookstay'] = str(int(random.random() * 8) + 1)
         service2preference['hotel']['bookpeople'] = '1' if random.random() < 0.1 else str(int(random.random() * 8) + 1)
-        if 'name' in service2preference['hotel'] and random.random() > (0.25 * name_prob_scale):
-            # 72 -> 18
+        # same with restaurant
+        if 'name' in service2preference['hotel'] and random.random() > (0.2 * name_prob_scale):
             del service2preference['hotel']['name']
 
     if 'attraction' in service2preference:
-        if 'name' in service2preference['attraction'] and random.random() > (0.3 * name_prob_scale):
-            # 72 -> 18
+        # same with restaurant
+        if 'name' in service2preference['attraction'] and random.random() > (0.2 * name_prob_scale):
             del service2preference['attraction']['name']
 
     for slot_key, ratio in {'bookday': 0.4, 'bookpeople': 0.6}.items():
@@ -177,7 +162,7 @@ def prepare_preference(services):
         while preference['departure'] == preference['destination']:
             preference['destination'] = random.choice(config.taxi_destinations)
 
-        # 通常 leave at 和 arrive by 只设置一个即可
+        # keep only one between `leaveat` and `arriveby`, taxi's time is freestyle
         key = 'leaveat' if random.random() > 0.5 else 'arriveby'
         preference[key] = random.choice(config.taxi_times)
 
@@ -217,6 +202,7 @@ def prepare_preference(services):
             for del_slot_key in del_slot_keys:
                 del preference[del_slot_key]
 
+    # remove booking slots with probality, the probablity is pre-configured
     for service in ['train', 'restaurant', 'hotel']:
         service2remove_booking_prob = {
             'train': 0.05,
@@ -242,6 +228,7 @@ def update_taxi_slots(preference, service2preference_gen_latest):
 
     up_service = random.choice(up_serivices)
     if 'train' == up_service:
+        # train station will be the destination or arriveby for taxi
         if random.random() < 0.5:
             if 'train-departure' in service2preference_gen_latest['train']:
                 preference['destination'] = service2preference_gen_latest['train']['train-departure']
@@ -254,6 +241,7 @@ def update_taxi_slots(preference, service2preference_gen_latest):
                 preference['leaveat'] = service2preference_gen_latest['train']['train-arriveby']
 
     elif f'{up_service}-name' in service2preference_gen_latest[up_service]:
+        # same with other services like, restaurant or hotel
         name = service2preference_gen_latest[up_service][f'{up_service}-name']
         preference['departure' if random.random() < 0.5 else 'destination'] = name
         if (up_service == 'restaurant'
@@ -656,14 +644,20 @@ def generate_dialog(services, service2preference, cache):
     service2preference_gen = defaultdict(dict)
     service2preference_gen_latest = defaultdict(dict)
 
+    # here we define the main user simulator and other user's assistency simulators to increase diversity
     user_simulator = GPTUserSimulator()
     user_simulator_empty_preference = GPTEmptyPreferenceUserSimulator()
+    # rewrite user's utterance to increase diversity for user's utterances
     user_response_rewrite_simulator = GPTUserUtterenceRewriteSimulator()
+    # user will update his/her preference if the agent can not find appropriate choice
     user_update_preference_simulator = GPTUserUpdatePreferenceSimulator()
 
+    # simulator to verify the dialog state
     dialog_state_simulator = GPTDialogStateSimulator()
+    # simulator to verify the names in dialog state which are always rewrite by GPT
     dialog_state_name_simulator = GPTDialogStateNameSimulator()
 
+    # agent simulators for different dialog status
     action2simulator = {
         'asking': GPTSystemAskingResponseSimulator(),
         'chatting': GPTSystemChattingResponseSimulator(),
@@ -724,11 +718,12 @@ def generate_dialog(services, service2preference, cache):
                 turn_user_asking_slot_keys = []
 
             if not preference_dst:
+                # conversion start
                 user_utterance = user_simulator_empty_preference(service=current_service)
                 user_utterance = random.choice(user_utterance)
 
             elif search_result_size == 0:
-                # update a preference to find another candidates
+                # update a preference to find other candidates
                 update_slot_kv = {}
                 if num_update_preference_turn > 0:
                     update_slot_kv = rollback_preference(
@@ -740,11 +735,14 @@ def generate_dialog(services, service2preference, cache):
                     )
                     print(f'[{current_service}] update to new user preference = {json.dumps(update_slot_kv)}')
                     num_update_preference_turn -= 1
+                    
                 if not update_slot_kv:
+                    # end the service if no slot is updated
                     service2status[current_service] = 'booked'
                 else:
                     service2status[current_service] = 'booking'
 
+                # use update preference prompts to generate utterance
                 user_utterance = user_update_preference_simulator(
                     service=current_service,
                     history=history,
@@ -766,13 +764,6 @@ def generate_dialog(services, service2preference, cache):
                     search_result_size=search_result_size,
                     verbose=True
                 )
-
-            if (not turn_user_asking_slot_keys
-                    and current_service == 'attraction' and not service_booking
-                    and service2status.get(current_service, '') == 'booked'):
-                user_utterance = user_utterance.split('.')[-1]
-                if 'thank' not in user_utterance.lower():
-                    user_utterance = "Thanks for the help, that is all I need. [EOF]"
 
             user_utterance_list = user_response_rewrite_simulator(
                 history=history, utterance=user_utterance, verbose=False
@@ -799,6 +790,7 @@ def generate_dialog(services, service2preference, cache):
             history.append(clean_utterance(user_utterance))
             user_history.append(clean_utterance(user_utterance))
 
+            # identify dialog states from dialog with specified prompts
             for _ in range(3):
                 dialog_status = dialog_state_simulator(
                     service=current_service,
@@ -808,11 +800,11 @@ def generate_dialog(services, service2preference, cache):
                 )
                 if dialog_status:
                     break
-                time.sleep(3)
 
             update_dialog_status(current_service, dialog_status, preference_dst, preference_gen, preference_gen_latest, service_booking)
             print('\n')
 
+            # search the API by dialog states
             api_config = {
                 'service': current_service,
                 'active_intent': f'find_{current_service}',
@@ -826,31 +818,34 @@ def generate_dialog(services, service2preference, cache):
                 'service': current_service,
                 'history': history
             }
+            # to save tokens for extensive search results, we limit the max search result to 10
             if len(search_results) > 10:
                 kwargs['search_results'] = search_results[0:10]
             search_result_size = len(search_results)
 
             asking_slots = []
+            # if the search result is greator than 3, the system agent will try to ask more preference from the user
+            # it should be noted that the taxi's search is special, the search result is taxi's propertities
             if len(search_results) > 3 or current_service == 'taxi':
                 asking_slots = [
                     x for x in system_asking_slot_keys
                     if x not in preference_gen_latest and 'book' not in x and x not in system_asked_slot_keys
                 ]
 
+            # if search result's size is 1 or all user perference is satifised
+            # and the current service is on-goning, we turn the dialog status to booking for progressing
             if service2status.get(current_service, '') != 'booked' and (
                     len(search_results) == 1 or
                     is_preference_satifised(current_service, preference, preference_gen_latest)
             ):
-                if current_service == 'taxi':
-                    service2status[current_service] = 'booking'
-                else:
-                    service2status[current_service] = 'booking'
+                service2status[current_service] = 'booking'
 
             system_service_status = service2status.get(current_service, 'inform')
             system_template_utterance = ""
 
             is_recommended_turn = False
 
+            # END OF DIALOG STATUS
             if ('[EOF]' in user_utterance or 'bye' in user_utterance) and service2status[current_service] == 'booked':
                 action = 'chatting'
 

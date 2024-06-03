@@ -56,7 +56,6 @@ def get_same_slot_key_from_history(service, slot_key, slot_val, servcie2preferen
         if service == history_service:
             continue
         for history_slot_key, history_slot_val in history_preference_gen.items():
-            # 这里大概以 10% 的概率替换？
             if history_slot_key == slot_key and history_slot_val == slot_val:
                 if 'area' in slot_key:
                     return random.choice([
@@ -146,7 +145,7 @@ class GPTUserSimulator(GPTBase):
 
         preference_same_with_history = {}
         if random.random() < 0.2 or service == 'taxi':
-            # 历史相同槽位替换
+            # Compare with other service's names, use it as the taxi departure or destination
             preference_same_with_history = {
                 f'{service}-{slot_key}': get_same_slot_key_from_history(service, slot_key, slot_val, service2preference_gen_latest)
                 for slot_key, slot_val in preference_dst.items()
@@ -155,7 +154,7 @@ class GPTUserSimulator(GPTBase):
         if preference_same_with_history:
             print(f'[{service}] same slot compared with history = {preference_same_with_history}', flush=True)
 
-        # 当前槽位
+        # current slots
         preference_formated = {
             f"{service}'s {slot_key}": slot_val for slot_key, slot_val in preference_dst.items()
             if f'{service}-{slot_key}' not in preference_same_with_history
@@ -187,7 +186,7 @@ class GPTUserSimulator(GPTBase):
                 "Please use values inside the 'preference' as much as possible, rather than using specific names."
             )
 
-        # GPT 4 似乎不太能区分清楚 taxi arrive by 和 leave at 的区别
+        # it seems that GPT 4 can not identify the difference between taxi `arrive by` and `leave at`
         if 'taxi-arriveby' in preference_formated:
             prompt += (
                 "For `taxi` service, please note the `taxi-arriveby` is the time that you arrived at the destination, not your departure time.\n"
@@ -211,7 +210,7 @@ class GPTUserSimulator(GPTBase):
 
         elif service_status == 'inform':
             if random.random() < 0.5:
-                # 50% 的概率使用同义词
+                # replace with synonyms with 50% percent
                 prompt += (
                     f"Please randomly use synonyms or synonymous phrases to describe your intention, for example:\n"
                     f"- you can use `something to eat` or some food` instead of `restaurant`."
@@ -403,7 +402,7 @@ class GPTUserUtterenceRewriteSimulator(GPTBase):
             if not isinstance(resp, str):
                 continue
             if '!' in resp and len(resp.split('!')[0].split(' ')) <= 3:
-                # 处理这种 case ：Hey! I'm looking for 'Rosas Bed and Breakfast'. Can you guide me?
+                # format cases like, Hey! I'm looking for 'Rosas Bed and Breakfast'. Can you guide me?
                 resp = '!'.join(resp.split('!')[1:]).strip()
             if resp:
                 out_resp.append(resp)
@@ -600,7 +599,6 @@ def get_system_inform_prompt(service, **kwargs):
             "If the search result is unique, please inform the user with the attraction name.\n"
         )
     elif service == 'taxi':
-        # taxi 不需要 inform，细节都在 asking 阶段
         pass
 
     return prompt
@@ -632,7 +630,7 @@ class GPTSystemSimulator(GPTBase):
 
     def prompting(self, service, service_status, history, search_condition, search_results, **kwargs):
         if service_status == 'recommend':
-            # 推荐轮次，减token，并增加随机性
+            # random recommend items
             random.shuffle(search_results)
             search_results = search_results[0:5]
 
@@ -645,7 +643,7 @@ class GPTSystemSimulator(GPTBase):
             f"the search results: {json.dumps(search_results)}\n"
             "Your response must resemble an online chat as much as possible, and make them as brief as possible.\n"
         )
-        # 不同的service，会有一些不同的通用Prompt限制
+        # with different Prompt's limition with different services
         prompt += get_system_in_domain_prompt(service)
 
         print(f'[{service}] system simulater, '
@@ -661,7 +659,7 @@ class GPTSystemSimulator(GPTBase):
         skip_service_status = {
             'taxi_recommend',
         }
-        # 补充 service 绑定的不同 status 对应的 prompt
+        # get extra prompts with different dialog status
         if f'{service}_{service_status}' in skip_service_status:
             pass
         else:

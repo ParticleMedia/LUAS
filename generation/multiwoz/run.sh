@@ -1,13 +1,6 @@
 #!/bin/bash
 set -x
 
-#for num in {1..50}
-#do
-#  echo $num
-#  python run_single.py
-#  sleep 30s
-#done
-
 mkdir -p logs
 
 for n in {1..1}

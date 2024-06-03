@@ -96,8 +96,5 @@ Please output 10 different responses in Json format like ["response0", "response
 if __name__ == '__main__':
     import os
 
-    # for template in open('./templates/hotel.txt'):
-    #     test = GPTTest()
-    #     print(test(template=template.strip(), verbose=True))
     test = GPTTest()
     print(test())
