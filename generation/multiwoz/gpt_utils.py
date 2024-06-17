@@ -89,7 +89,7 @@ class GPTEmptyPreferenceUserSimulator(GPTBase):
         super().__init__(model='gpt-4-1106-preview')
 
     def prompting(self, service, **kwargs):
-        print(f"[{service}] user simulation empty preference, service = {service}", flush=True)
+        logging.info(f"[{service}] user simulation empty preference, service = {service}")
 
         service2prompt = {
             'attraction': ['local attractions'],
@@ -131,7 +131,7 @@ class GPTUserSimulator(GPTBase):
                   search_result_size,
                   **kwargs):
 
-        print(f"[{service}] user simulation, status = {service_status}, preference = {json.dumps(preference_dst)}", flush=True)
+        logging.info(f"[{service}] user simulation, status = {service_status}, preference = {json.dumps(preference_dst)}")
 
         service_templates = []
         if service == 'train':
@@ -152,7 +152,7 @@ class GPTUserSimulator(GPTBase):
             }
             preference_same_with_history = {k: v for k, v in preference_same_with_history.items() if v}
         if preference_same_with_history:
-            print(f'[{service}] same slot compared with history = {preference_same_with_history}', flush=True)
+            logging.info(f'[{service}] same slot compared with history = {preference_same_with_history}')
 
         # current slots
         preference_formated = {
@@ -199,7 +199,7 @@ class GPTUserSimulator(GPTBase):
             )
 
         elif user_asking_slot_keys:
-            print(f"[{service}] user simulation, status = {service_status}, asking slots = {user_asking_slot_keys}")
+            logging.info(f"[{service}] user simulation, status = {service_status}, asking slots = {user_asking_slot_keys}")
             prompt += (
                 'Here is some information that you want to get from the local guide:\n'
                 f'{json.dumps(user_asking_slot_keys)}\n'
@@ -246,7 +246,7 @@ class GPTUserSimulator(GPTBase):
                     "And now, all your preference is meet, but you don't need a reservation at the moment.\n"
                     "Please say thanks for the help from local guide politely and output the mark `[EOF]`"
                 )
-                print(f"[{service}] user simulation, do not need a booking")
+                logging.info(f"[{service}] user simulation, do not need a booking")
 
             elif search_result_size > 1:
                 prompt += (
@@ -278,7 +278,7 @@ class GPTUserSimulator(GPTBase):
                     "And now, all your preferences are met, but you don't need a reservation at the moment.\n"
                     "Please say thanks for the help from the local guide politely and output the mark `[EOF]`"
                 )
-                print(f"[{service}] user simulation, do not need a booking")
+                logging.info(f"[{service}] user simulation, do not need a booking")
             else:
                 prompt += (
                     "And now, all your preferences are met.\n"
@@ -314,7 +314,7 @@ class GPTUserUpdatePreferenceSimulator(GPTBase):
                   preference_new,
                   **kwargs):
 
-        print(f"[{service}] user preference update simulation, preference = {json.dumps(preference_new)}", flush=True)
+        logging.info(f"[{service}] user preference update simulation, preference = {json.dumps(preference_new)}")
 
         service_templates = []
         if service == 'train':
@@ -458,7 +458,7 @@ class GPTSystemAskingResponseSimulator(GPTBase):
         super().__init__(model='gpt-4-1106-preview')
 
     def prompting(self, service, history, asking_slots, **kwargs):
-        print(f'[{service}] asking simulator, asking slots = {asking_slots}', flush=True)
+        logging.info(f'[{service}] asking simulator, asking slots = {asking_slots}')
 
         return (
             f"You are a local agent for `{service}`, and are chatting with the user online.\n"
@@ -619,7 +619,7 @@ def get_system_answer_prompt(service, **kwargs):
     response_slots = kwargs.get('response_slots', {})
     response_slots.extend([f'{service} {x}' for x in pre_set_keys if random.random() <= 0.2])
     response_slots = list(set(response_slots))
-    print(f'[{service}] system answer slots = {response_slots}')
+    logging.info(f'[{service}] system answer slots = {response_slots}')
     if pre_set_keys:
         prompt += f"Please summarize the {','.join(pre_set_keys)} from the search result to response to the user.\n"
     return prompt
@@ -646,9 +646,9 @@ class GPTSystemSimulator(GPTBase):
         # with different Prompt's limition with different services
         prompt += get_system_in_domain_prompt(service)
 
-        print(f'[{service}] system simulater, '
+        logging.info(f'[{service}] system simulater, '
               f'status = {service_status}, '
-              f'search results size = {len(search_results)}', flush=True)
+              f'search results size = {len(search_results)}')
 
         status2func = {
             'inform': get_system_inform_prompt,
@@ -676,7 +676,7 @@ class GPTSystemChattingResponseSimulator(GPTBase):
         super().__init__(model='gpt-4-1106-preview')
 
     def prompting(self, service, history, **kwargs):
-        print(f'[{service}] system simulater')
+        # logging.info(f'[{service}] system simulater')
         return (
             f"You are a local agent for `{service}`, and are chatting with the user online.\n"
             "Give your a conversion history and please read the history carefully.\n"

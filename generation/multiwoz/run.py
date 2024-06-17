@@ -8,6 +8,9 @@ if __name__ == '__main__':
     args.add_argument('--part', type=int, default=9)
     args = args.parse_args()
 
+    os.environ['OPENAI_API_KEY'] = 'nb-8jh4Y8klEqhMTXjWn-LdfUmCYhVUIVwL4VHncJWjhNmekG1MIY55DgfIs1_iCxkL2HM'
+    os.environ['OPENAI_BASE_URL'] = 'http://cooper.k8s.nb-prod.com/v1'
+
     hour = datetime.datetime.now().strftime('%Y-%m-%d_%H')
     part = str(args.part + 100)[1:]
 
@@ -19,8 +22,11 @@ if __name__ == '__main__':
         services_list.append(obj['services'])
         service2preference_list.append(obj['service2preference'])
 
-    bos, eos = 32, len(services_list)
+    cache = Cache(f'./datas/{hour}.part_{part}.txt')
+
+    bos, eos = 0, len(services_list)
     services_list = services_list[bos:eos]
     service2preference_list = service2preference_list[bos:eos]
 
-    run_batch(services_list, service2preference_list, f'./datas/{hour}.part_{part}.txt')
+    run_batch(cache, services_list, service2preference_list)
+
