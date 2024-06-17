@@ -658,6 +658,12 @@ class GenerationContext:
                 return False
         return True
 
+    def is_user_terminates_actively(self, user_utterance: str):
+        return '[efo]' in user_utterance.lower() or 'bye' in user_utterance.lower()
+
+    def is_user_asking_for_recommendation(self, user_utterance: str):
+        return '[recom]' in user_utterance.lower()
+
     def is_recommend_need(self, user_utterance, search_results):
         if self.current_service == 'taxi':
             return False
@@ -666,9 +672,6 @@ class GenerationContext:
             return False
 
         if '[RECOM]' in user_utterance and len(self.turns) > 2:
-            return True
-
-        if 'an you help with' in user_utterance:
             return True
 
         if self.is_preference_satifised() and len(search_results) > 1:
@@ -825,10 +828,6 @@ class GenerationContext:
             history=self.history, utterance=user_utterance, verbose=False
         )
         user_utterance_list.append(user_utterance)
-
-        user_utterance_list = [x for x in user_utterance_list if 'heart' not in x]
-
-        logging.info(f"[{self.current_service}] user: {user_utterance}")
         logging.info(f"[{self.current_service}] user: {json.dumps(user_utterance_list, indent=2)}")
 
         extra_marks = ' '.join([x for x in ['[EOF]', '[RECOM]'] if x in user_utterance])
@@ -850,13 +849,13 @@ class GenerationContext:
 
     def generate_system_utterance(self, user_utterance, search_results, asking_slots, refuse_booking):
 
-        kwargs = {
+        simulator_kwargs = {
             'service': self.current_service,
             'history': self.history
         }
         # to save tokens for extensive search results, we limit the max search result to 10
         if len(search_results) > 10:
-            kwargs['search_results'] = search_results[0:10]
+            simulator_kwargs['search_results'] = search_results[0:10]
         # please noted the result size is the original search result but not the truncated one
         search_result_size = len(search_results)
 
@@ -869,11 +868,9 @@ class GenerationContext:
 
         system_service_status = self.service2status.get(self.current_service, 'inform')
         system_template_utterance = ""
-
         system_recom_turn = False
 
-        if (('[EOF]' in user_utterance or 'bye' in user_utterance)
-                and self.service2status[self.current_service] == 'booked'):
+        if self.is_user_terminates_actively(user_utterance) and self.service2status[self.current_service] == 'booked':
             # END OF DIALOG STATUS with booked dialog status, update the response purpose into chatting
             system_action = 'chatting'
 
@@ -881,7 +878,7 @@ class GenerationContext:
             # if there are slots that the system is going to ask, like hotel-type, hotel-stars
             # update the response propose into asking
             n = int(random.random() * len(asking_slots)) + 1
-            kwargs['asking_slots'] = asking_slots[0:n]
+            simulator_kwargs['asking_slots'] = asking_slots[0:n]
             dialog_status = {
                 'action': 'asking',
                 'slots': {k: '' for k in asking_slots},
@@ -895,7 +892,8 @@ class GenerationContext:
             if self.is_recommend_need(user_utterance, search_results):
                 system_service_status = 'recommend'
 
-            if system_service_status == 'recommend' and '[RECOM]' in user_utterance:
+            # recommend only if user asking for a recommendation
+            if system_service_status == 'recommend' and self.is_user_asking_for_recommendation(user_utterance):
                 system_recom_turn = True
                 number = len(search_results)
                 search_results = [random.choice(search_results)]
@@ -923,14 +921,15 @@ class GenerationContext:
                         logging.info(f'[{self.current_service}] template answer, update name = [{params["name"]}]')
                     self.extra_slots_for_search[f'{self.current_service}-name'] = params['name']
 
-            if '[eof]' in user_utterance.lower() and (
+            # To normalize the dialog status, this is not used for training or controling dialog generation
+            if self.is_user_terminates_actively(user_utterance) and (
                     not self.service_booking or len([x for x in self.preference.keys() if 'book' in x]) == 0
             ) and self.current_service == 'train':
                 system_service_status = 'booking'
 
-            kwargs['service_status'] = system_service_status
-            kwargs['search_results'] = search_results
-            kwargs['search_condition'] = {self.current_service: self.preference_gen_latest}
+            simulator_kwargs['service_status'] = system_service_status
+            simulator_kwargs['search_results'] = search_results
+            simulator_kwargs['search_condition'] = {self.current_service: self.preference_gen_latest}
             logging.info(f'[{self.current_service}] system: search size = {len(search_results)}')
 
             self.turns.append({
@@ -959,11 +958,11 @@ class GenerationContext:
 
         if (self.current_service in ['train', 'restaurant', 'hotel'] and search_result_size == 1
                 and (len([x for x in self.preference if 'book' in x]) == 0 or refuse_booking)):
-            kwargs['service_booking'] = False
+            simulator_kwargs['service_booking'] = False
 
         if not system_template_utterance:
-            kwargs['verbose'] = False
-            system_resonse = self.action2simulator[system_action](**kwargs)
+            simulator_kwargs['verbose'] = False
+            system_resonse = self.action2simulator[system_action](**simulator_kwargs)
 
             if not system_resonse or not system_resonse.get('response', ''):
                 status = False
@@ -1012,6 +1011,7 @@ def generate_dialog(services, service2preference, cache):
             refuse_booking = not gen_ctx.service_booking and search_result_size == 1
 
             # get information slots like opening hour, location, for asking
+            # it can be empty, these slots not included into the dialog state, it's for candidate's attributes
             user_asking_slot_keys = gen_ctx.get_user_asking_slots(search_result_size)
 
             user_utterance = gen_ctx.generate_user_utterance(
@@ -1021,6 +1021,7 @@ def generate_dialog(services, service2preference, cache):
                 user_asking_slot_keys=user_asking_slot_keys
             )
 
+            # extracting dialog state after user response
             gen_ctx.update_dialog_states_after_user_response()
 
             # search the API by dialog states
@@ -1033,18 +1034,18 @@ def generate_dialog(services, service2preference, cache):
             search_results = woz_db.search(**api_config)
             logging.info(f'[{current_service}] system: search size = {len(search_results)}')
 
+            # get system asking slots, these slots are like hotel-stars, hotel-area and other dialog state slots
             system_asking_slots = gen_ctx.get_system_asking_slots(search_results)
-            (
-                system_utterance, system_action, system_recom_turn
-            ) = gen_ctx.generate_system_utterance(
+            # generate system response by use utterance, search results and system asking slots
+            system_utterance, system_action, system_recom_turn = gen_ctx.generate_system_utterance(
                 user_utterance=user_utterance,
                 search_results=search_results,
                 asking_slots=system_asking_slots,
                 refuse_booking=refuse_booking
             )
-
+            # extracting dialog states after system response,
+            # this is for dialog state from system response
             gen_ctx.update_dialog_states_after_system_response(search_results)
-
             # update service status after each round
             gen_ctx.update_service_status(
                 user_utterance=user_utterance,
@@ -1055,7 +1056,8 @@ def generate_dialog(services, service2preference, cache):
                 api_config=api_config,
                 search_results=search_results
             )
-            # there will be some slots like restaurant name or attraction name be specified, but not included into the dst (multiwoz config?)
+            # there will be slots like restaurant name or attraction name which are informed by the system
+            # these slots might not be included with the dialog state
             if gen_ctx.extra_slots_for_search:
                 api_config_copy = copy.deepcopy(api_config)
                 api_config_copy['slot_values'].update({k: [v] for k, v in gen_ctx.extra_slots_for_search.items()})
