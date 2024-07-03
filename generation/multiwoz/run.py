@@ -8,8 +8,8 @@ if __name__ == '__main__':
     args.add_argument('--part', type=int, default=9)
     args = args.parse_args()
 
-    os.environ['OPENAI_API_KEY'] = 'nb-8jh4Y8klEqhMTXjWn-LdfUmCYhVUIVwL4VHncJWjhNmekG1MIY55DgfIs1_iCxkL2HM'
-    os.environ['OPENAI_BASE_URL'] = 'http://cooper.k8s.nb-prod.com/v1'
+    os.environ['OPENAI_API_KEY'] = ''
+    os.environ['OPENAI_BASE_URL'] = ''
 
     hour = datetime.datetime.now().strftime('%Y-%m-%d_%H')
     part = str(args.part + 100)[1:]
